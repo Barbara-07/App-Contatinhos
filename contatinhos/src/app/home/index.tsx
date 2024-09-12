@@ -1,6 +1,6 @@
 import { Alert, View, SectionList, Text } from "react-native";
 import { Feather } from '@expo/vector-icons'
-import { useState, useEffect } from "react";
+import { useState, useEffect, useId } from "react";
 import { styles } from "./styles"
 import * as Contacts from 'expo-contacts'
 import { Input } from '@/app/components/input'
@@ -9,26 +9,30 @@ import { Contact, ContactProps } from '@/app/components/contact'
 
 type SectionListDataProps = {
     title: string
-    data: ContactProps
+    data: ContactProps[]
 }
 
 export function Home() {
+
+    const [name, setName] = useState("")
+    const [contacts, setContacts] = useState<SectionListDataProps[]>()
 
     async function  fetchContacts() {
         try{
             const { status } = await Contacts.requestPermissionsAsync()
             if (status === Contacts.PermissionStatus.GRANTED){
                 const {data} = await Contacts.getContactsAsync()
-                console.log(data)}
-            } catch(error){
-                console.log(error)
-                Alert.alert("Contatos", "Não foi possível carregar os contatos")
+                const list = data.map((contact) => {
+                    id: contact.id ?? useId()
+                })
             }
+        } catch(error){
+            console.log(error)
+            Alert.alert("Contatos", "Não foi possível carregar os contatos")
         }
-    
-        const [name, setName] = useState("")
-        const [contacts, setContacts] = useState<SectionListDataProps[]>()
-    
+        
+        }
+
         useEffect(() => {
             fetchContacts()
         },[])
