@@ -1,11 +1,18 @@
-import { Alert, View, SectionList, Text } from "react-native";
+import { useState, useEffect, useId, useRef } from "react";
+import { Alert, View, SectionList, Text, Touchable } from "react-native";
+
 import { Feather } from '@expo/vector-icons'
-import { useState, useEffect, useId } from "react";
-import { styles } from "./styles"
 import * as Contacts from 'expo-contacts'
-import { Input } from '@/app/components/input'
+import BottomSheet from "@gorhom/bottom-sheet"
+
+import { styles } from "./styles"
 import { theme } from "@/theme";
+
+import { Input } from '@/app/components/input'
 import { Contact, ContactProps } from '@/app/components/contact'
+import { Avatar } from "../components/avatar";
+import { TouchableOpacity } from "react-native-gesture-handler";
+import bottomSheet from "@gorhom/bottom-sheet/lib/typescript/components/bottomSheet";
 
 type SectionListDataProps = {
     title: string
@@ -16,12 +23,27 @@ export function Home() {
 
     const [name, setName] = useState("")
     const [contacts, setContacts] = useState<SectionListDataProps[]>()
+    const [contact, setContact] = useState<Contacts.Contact>()
+
+    const BottomSheetRef = useRef<BottomSheet>(null)
+
+    const handleBottomSheetOpen = () => BottomSheetRef.current?.expand()
+    const handleBottomSheetClose = () => BottomSheetRef.current?.snapToIndex(0)
+
+    async function handleOpenDetails(id: string) {
+        const response = await Contacts.getContactByIdAsync(id)
+        setContact(response)
+        handleBottomSheetOpen()
+    }
 
     async function  fetchContacts() {
         try{
             const { status } = await Contacts.requestPermissionsAsync()
             if (status === Contacts.PermissionStatus.GRANTED){
-                const {data} = await Contacts.getContactsAsync()
+                const {data} = await Contacts.getContactsAsync({
+                    name, 
+                    sort: 'firstName'
+                })
                 const list = data.map((contact) => {
                     id: contact.id ?? useId()
                 })
@@ -35,7 +57,7 @@ export function Home() {
 
         useEffect(() => {
             fetchContacts()
-        },[])
+        },[name])
 
     return (
         <View style={styles.container}>
@@ -50,14 +72,15 @@ export function Home() {
                 </Input>
                 </View>
                 <SectionList
-                sections={[{title: "R", data: [{id: "1", name: "Heloísa"}] }]}
+                sections={contacts}
                 keyExtractor={( item )=> item.id} 
                 renderItem={({ item }) => (
-            <Contact contact={{
-                name: item.name,
-                image: require("@/assets/avatar.jpeg")
-            }} 
-            />
+                    <TouchableOpacity
+                    onPress={() => {
+                        handleOpenDetails(item.id)
+                    }} >
+            <Contact contact={item} />
+            </TouchableOpacity>
         )}
         renderSectionHeader={({ section }) =>
             (<Text style={styles.section}>{section.title}</Text>)}
@@ -65,6 +88,27 @@ export function Home() {
         showsVerticalScrollIndicator={false}
         SectionSeparatorComponent={() => <View style={styles.separator}/>}
         />
+        {
+            contact &&
+        <BottomSheet ref={bottomSheet} snapPoints={[1, 284]} handleComponent={() => null}>
+            <Avatar name={contact.name} image={contact.image} variant='large' />
+            <View style={styles.bottomSheetContent}>
+                <Text>{contact.name}</Text>
+            </View>
+            <View style={styles.phone}>
+                <Feather name="phone" size={18} color={theme.colors.blue}></Feather>
+                <Text style={styles.phoneNumber}></Text>
+            </View>
+        </BottomSheet> 
+        }
+
+        {
+            contact?.phoneNumbers &&
+            <View style={styles.phone}>
+                <Feather name="phone" size={18} color={theme.colors.blue}></Feather>
+                <Text style={styles.phoneNumber}>{contact.phoneNumbers[0].number}</Text>
+            </View>    
+        }
     </View>
     )
 }

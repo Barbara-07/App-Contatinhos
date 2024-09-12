@@ -1,5 +1,6 @@
 import { StyleSheet } from "react-native";
 import { theme } from "@/theme/index"
+import bottomSheet from "@gorhom/bottom-sheet/lib/typescript/components/bottomSheet";
 
 export const styles = StyleSheet.create({
     container:{
@@ -39,5 +40,14 @@ export const styles = StyleSheet.create({
         height: 1,
         backgroundColor: theme.colors.gray_300,
         margin: 12,
-    }
+    },
+    bottomSheetContent: {
+
+    },
+    phone: {
+
+    },
+    phoneNumber: {
+
+    },
 })
