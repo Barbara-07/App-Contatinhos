@@ -62,6 +62,8 @@ export function Home() {
         renderSectionHeader={({ section }) =>
             (<Text style={styles.section}>{section.title}</Text>)}
         contentContainerStyle = {styles.contentList}
+        showsVerticalScrollIndicator={false}
+        SectionSeparatorComponent={() => <View style={styles.separator}/>}
         />
     </View>
     )
